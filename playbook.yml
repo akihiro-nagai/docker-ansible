@@ -1,0 +1,102 @@
+- hosts: all
+  sudo: true
+  vars:
+    username: aki
+    password: aki-password
+    homedir: /home/aki
+  tasks:
+    - name: ユーザの作成
+      user: name={{ username }} password={{ password }} state=present
+
+    - name: パッケージのインストール(Ubuntu)
+      apt: pkg={{ item }} state=latest
+      with_items:
+        - git
+        - tig
+        - zsh
+        - tmux
+        - ctags
+        - cscope
+        - ruby
+        - irb
+        - mercurial
+        - cscope
+        - clang
+        - crash
+      when: ansible_os_family == "Debian"
+    - name: パッケージのインストール(Fedora)
+      yum: name={{ item }} state=latest
+      with_items:
+        - git
+        - tig
+        - zsh
+        - tmux
+        - ctags
+        - cscope
+        - clang
+        - ruby
+        - irb
+        - mercurial
+        - cscope
+        - make
+        - automake
+        - gcc
+        - gcc-c++
+        - kernel-devel
+        - kexec-tools
+        - crash
+      when: ansible_os_family == "RedHat"
+
+    - name: デフォルト設定ファイルのコピー
+      copy: src=resources/setting-files/ dest={{ homedir }}/
+      notify: setting-changed-notification
+      sudo: false
+
+    - name: デフォルトシェルの設定
+      user: name={{ username }} shell=/usr/bin/zsh
+
+    - name: vimのビルドに必要なパッケージのインストール(build-dep)
+      command: apt-get build-dep vim vim-gtk -y
+      when: ansible_os_family == "Debian"
+
+    - name: yum-utilsのインストール
+      yum: name=yum-utils state=latest
+      when: ansible_os_family == "RedHat"
+    - name: vimのビルドに必要なパッケージのインストール(yum-builddep)
+      command: yum-builddep {{ item }} -y
+      with_items:
+        - vim
+        - vim-X11
+      when: ansible_os_family == "RedHat"
+
+    - name: vimのビルドに必要なライブラリのインストール(Ubuntu)
+      apt: pkg={{ item }} state=latest
+      with_items:
+        - libpython-dev
+        - libpython3-dev
+      when: ansible_os_family == "Debian"
+    - name: vimのビルドに必要なライブラリのインストール(Fedora)
+      yum: name={{ item }} state=latest
+      with_items:
+        - python-devel
+        - python3-devel
+      when: ansible_os_family == "RedHat"
+
+
+    - name: vimのソースダウンロード
+      hg: repo=https://vim.googlecode.com/hg/vim dest={{ homedir }}/src/vim
+      sudo: false
+
+    - name: configure vim
+      command: ./configure --enable-luainterp --enable-pythoninterp --enable-python3interp --enable-rubyinterp --enable-cscope --enable-multibyte --enable-gtk2-check --enable-fail-if-missing chdir={{ homedir }}/src/vim
+      sudo: false
+    - name: build vim
+      command: make -j 9 chdir={{ homedir }}/src/vim
+      sudo: false
+
+    - name: Install vim
+      command: make install chdir={{ homedir }}/src/vim
+
+    - name: NeoBundleのインストール
+      git: repo=https://github.com/Shougo/neobundle.vim dest={{ homedir }}/.vim/bundle/neobundle.vim
+      sudo: false

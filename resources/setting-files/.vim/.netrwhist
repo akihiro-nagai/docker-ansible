@@ -1,0 +1,6 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =4
+let g:netrw_dirhist_1='/media/ssd/workspace/daily-build/config'
+let g:netrw_dirhist_2='/media/ssd/workspace/valnerability/01-tkill'
+let g:netrw_dirhist_3='/media/ssd/workspace/javatest/anttest/scripts'
+let g:netrw_dirhist_4='/media/ssd/workspace/javatest/anttest/test'
